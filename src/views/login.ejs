@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Administrador</title>
+    <% include partials/head %>
+  </head>
+  <body>
+    <div class="login-box">
+      <img class="avatar" src="img/logo.png" alt="">
+      <h1>Administrador</h1>
+      
+      <% if (mensaje.length > 0) { %>
+        <div class="alert alert-danger">
+          <%= mensaje %>
+        </div>
+      <% } %>
+      
+      <form action="/" method="post">
+          <label for="email">Email</label>
+          <input type="text" name="email" placeholder="Correo electronico">
+          <label for="password">Contraseña</label>
+          <input type="password" name="password" placeholder="Clave">
+          <hr>
+          <input type="submit" value="Iniciar">
+      </form>
+      <p>¿Eres estudiante? <a href="/estudiante">Ingresar</a></p>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Estudiantes</title>
+</head>
+<body>
+    <%- include('partials/header') %>
+
+    <div class="container">
+        <div class="header-actions">
+            <a href="/logout" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Salir
+            </a>
+        </div>
+
+        <div class="dashboard">
+            <!-- Left side - Registration Form -->
+            <div class="registration-section">
+                <h2 class="section-title">Registrar Nuevo Estudiante</h2>
+                <form id="studentForm" action="/students/register" method="POST" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="firstName">Nombres:</label>
+                        <input type="text" id="firstName" name="firstName" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lastName">Apellidos:</label>
+                        <input type="text" id="lastName" name="lastName" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dni">DNI:</label>
+                        <input type="text" 
+                               id="dni" 
+                               name="dni" 
+                               pattern="[0-9]{8}" 
+                               maxlength="8" 
+                               required 
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 8)"
+                               onkeyup="validateDNI(this)">
+                        <span id="dniError" class="error-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="age">Edad:</label>
+                        <input type="number" id="age" name="age" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="grade">Grado:</label>
+                        <select id="grade" name="grade" required>
+                            <option value="">Seleccione un grado</option>
+                            <optgroup label="Primaria">
+                                <option value="primer grado">Primer Grado</option>
+                                <option value="segundo grado">Segundo Grado</option>
+                                <option value="tercer grado">Tercer Grado</option>
+                                <option value="cuarto grado">Cuarto Grado</option>
+                                <option value="quinto grado">Quinto Grado</option>
+                                <option value="sexto grado">Sexto Grado</option>
+                            </optgroup>
+                            <optgroup label="Secundaria">
+                                <option value="primero secundaria">Primero de Secundaria</option>
+                                <option value="segundo secundaria">Segundo de Secundaria</option>
+                                <option value="tercero secundaria">Tercero de Secundaria</option>
+                                <option value="cuarto secundaria">Cuarto de Secundaria</option>
+                                <option value="quinto secundaria">Quinto de Secundaria</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="photo">Foto:</label>
+                        <input type="file" id="photo" name="photo" accept="image/*">
+                    </div>
+
+                    <button type="submit" class="submit-btn">Registrar Estudiante</button>
+                </form>
+            </div>
+
+            <!-- Right side - Students Table -->
+            <div class="table-section">
+                <h2 class="section-title">Estudiantes Registrados</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nombres</th>
+                                <th>Apellidos</th>
+                                <th>DNI</th>
+                                <th>Edad</th>
+                                <th>Grado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% students.forEach(student => { %>
+                                <tr>
+                                    <td><%= student.firstName %></td>
+                                    <td><%= student.lastName %></td>
+                                    <td><%= student.dni %></td>
+                                    <td><%= student.age %></td>
+                                    <td><%= student.grade %></td>
+                                    <td>
+                                        <a href="/students/<%= student._id %>" class="action-btn">Ver Más</a>
+                                        <a href="/students/<%= student._id %>/edit" class="action-btn edit-btn">Editar</a>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: transparent;
+        }
+
+        .dashboard {
+            display: flex;
+            gap: 30px;
+            justify-content: space-between;
+        }
+
+        .registration-section, .table-section {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .registration-section {
+            flex: 0 0 35%;
+        }
+
+        .table-section {
+            flex: 0 0 60%;
+        }
+
+        .section-title {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #34495e;
+            font-weight: bold;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+        }
+
+        .submit-btn {
+            background-color: #2ecc71;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            background-color: #27ae60;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .action-btn {
+            display: inline-block;
+            padding: 6px 12px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .action-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .edit-btn {
+            background-color: #2ecc71;
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .edit-btn:hover {
+            background-color: #27ae60;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .dashboard {
+                flex-direction: column;
+            }
+
+            .registration-section, .table-section {
+                flex: 0 0 100%;
+            }
+        }
+
+        /* Add these new styles */
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 14px;
+            background-color: white;
+        }
+
+        select:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+        }
+
+        optgroup {
+            font-weight: bold;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 12px;
+            margin-top: 5px;
+            display: block;
+        }
+
+        /* Style for the error state of input */
+        input.error {
+            border-color: #e74c3c;
+        }
+
+        .header-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+        }
+
+        .logout-btn {
+            background-color: #e74c3c;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.3s;
+        }
+
+        .logout-btn:hover {
+            background-color: #c0392b;
+            color: white;
+        }
+
+        .logout-btn i {
+            font-size: 16px;
+        }
+    </style>
+
+    <script>
+        function validateDNI(input) {
+            const errorElement = document.getElementById('dniError');
+            const value = input.value;
+            
+            // Remove any non-numeric characters
+            const numericValue = value.replace(/[^0-9]/g, '');
+            
+            if (numericValue.length !== 8) {
+                input.classList.add('error');
+                errorElement.textContent = 'El DNI debe tener exactamente 8 dígitos';
+                return false;
+            } else {
+                input.classList.remove('error');
+                errorElement.textContent = '';
+                return true;
+            }
+        }
+
+        // Add form validation before submit
+        document.getElementById('studentForm').addEventListener('submit', function(event) {
+            const dni = document.getElementById('dni');
+            if (!validateDNI(dni)) {
+                event.preventDefault();
+            }
+        });
+    </script>
+
+</body>
+</html>

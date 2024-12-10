@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Portal del Estudiante</title>
+    <% include partials/head %>
+</head>
+<body>
+    <%- include('partials/header') %>
+    
+    <div class="container">
+        <div class="header-actions">
+            <a href="/logout" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Salir
+            </a>
+        </div>
+
+        <div class="welcome-section">
+            <h1>Bienvenido, <%= student.firstName %> <%= student.lastName %></h1>
+            <p>DNI: <%= student.dni %></p>
+            <p>Grado: <%= student.grade %></p>
+            
+            <% if (messages && messages.success && messages.success.length > 0) { %>
+                <div class="alert alert-success">
+                    <%= messages.success %>
+                </div>
+            <% } %>
+
+            <% if (messages && messages.error && messages.error.length > 0) { %>
+                <div class="alert alert-danger">
+                    <%= messages.error %>
+                </div>
+            <% } %>
+        </div>
+
+        <div class="record-box" onclick="showStudentForm()">
+            <h2>Registro de Estudiante</h2>
+            <i class="fas fa-user-graduate"></i>
+        </div>
+
+        <div id="studentModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeStudentModal()">&times;</span>
+                <h2>Registro de Estudiante</h2>
+                
+                <form id="feedbackForm">
+                    <!-- Debug output -->
+                    <% if (student && student._id) { %>
+                        <!-- Student ID is present: <%= student._id %> -->
+                    <% } else { %>
+                        <!-- No student ID found -->
+                    <% } %>
+                    
+                    <input type="hidden" name="studentId" id="studentId" 
+                           value="<%= student && student._id ? student._id.toString() : '' %>">
+                    
+                    <div class="form-group">
+                        <label for="teacherId">Profesor:</label>
+                        <select name="teacherId" id="teacherId" required>
+                            <option value="">Seleccione un profesor</option>
+                            <% teachers.forEach(function(teacher) { %>
+                                <option value="<%= teacher._id %>">
+                                    <%= teacher.firstName %> <%= teacher.lastName %>
+                                </option>
+                            <% }); %>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="date">Fecha:</label>
+                        <input type="date" name="date" id="date" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="subject">Materia:</label>
+                        <select name="subject" id="subject" required>
+                            <option value="">Seleccione una materia</option>
+                            <option value="matematicas">Matemáticas</option>
+                            <option value="lenguaje">Lenguaje</option>
+                            <option value="ciencias">Ciencias</option>
+                            <option value="historia">Historia</option>
+                            <option value="ingles">Inglés</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <p>El profesor explicó claramente la clase:</p>
+                        <div class="radio-group">
+                            <label><input type="radio" name="teachingQuality" value="siempre" required> Siempre</label>
+                            <label><input type="radio" name="teachingQuality" value="a veces"> A veces</label>
+                            <label><input type="radio" name="teachingQuality" value="nunca"> Nunca</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <p>El profesor llegó preparado a la clase:</p>
+                        <div class="radio-group">
+                            <label><input type="radio" name="classPreparation" value="siempre" required> Siempre</label>
+                            <label><input type="radio" name="classPreparation" value="a veces"> A veces</label>
+                            <label><input type="radio" name="classPreparation" value="nunca"> Nunca</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <p>El profesor atendió las dudas de los estudiantes:</p>
+                        <div class="radio-group">
+                            <label><input type="radio" name="studentAttention" value="siempre" required> Siempre</label>
+                            <label><input type="radio" name="studentAttention" value="a veces"> A veces</label>
+                            <label><input type="radio" name="studentAttention" value="nunca"> Nunca</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="notes">Observaciones:</label>
+                        <textarea name="notes" id="notes"></textarea>
+                    </div>
+
+                    <button type="submit" class="submit-btn">Guardar Registro</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="recordsModal" class="modal">
+            <div class="modal-content records-modal">
+                <span class="close" onclick="closeRecordsModal()">&times;</span>
+                <h2>Registros del Estudiante</h2>
+                
+                <div class="filters">
+                    <div class="filter-group">
+                        <label for="filterTeacher">Profesor:</label>
+                        <select id="filterTeacher" onchange="filterRecords()">
+                            <option value="">Todos los profesores</option>
+                            <% if (teachers && teachers.length > 0) { %>
+                                <% teachers.forEach(function(teacher) { %>
+                                    <option value="<%= teacher._id %>">
+                                        <%= teacher.firstName %> <%= teacher.lastName %>
+                                    </option>
+                                <% }); %>
+                            <% } %>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="filterSubject">Materia:</label>
+                        <select id="filterSubject" onchange="filterRecords()">
+                            <option value="">Todas las materias</option>
+                            <option value="matematicas">Matemáticas</option>
+                            <option value="lenguaje">Lenguaje</option>
+                            <option value="ciencias">Ciencias</option>
+                            <option value="historia">Historia</option>
+                            <option value="ingles">Inglés</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="filterDate">Fecha:</label>
+                        <input type="date" id="filterDate" onchange="filterRecords()">
+                    </div>
+                </div>
+
+                <div class="records-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Profesor</th>
+                                <th>Materia</th>
+                                <th>Explicación Clara</th>
+                                <th>Preparación</th>
+                                <th>Atención</th>
+                                <th>Observaciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recordsTableBody">
+                            <!-- Records will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        .welcome-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .record-box {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            text-align: center;
+            transition: transform 0.2s;
+            margin-bottom: 20px;
+        }
+
+        .record-box:hover {
+            transform: translateY(-5px);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            overflow-y: auto;
+        }
+
+        .records-modal {
+            width: 90%;
+            max-width: 1000px;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .close {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #666;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        select, input[type="date"], textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .question-group {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .radio-group label {
+            font-weight: normal;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .submit-btn, .logout-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .submit-btn {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .logout-btn {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .submit-btn:hover {
+            background: #27ae60;
+        }
+
+        .logout-btn:hover {
+            background: #c0392b;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 95%;
+                margin: 10px auto;
+                padding: 15px;
+            }
+
+            .radio-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .button-group button {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        .evaluation-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .question-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+
+        .alert-success {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .alert-danger {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        .records-modal {
+            width: 90%;
+            max-width: 900px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .records-table {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            white-space: nowrap;
+        }
+
+        th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+            color: #333;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        /* Make the modal content scrollable */
+        .modal-content {
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .view-btn {
+            background: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .view-btn:hover {
+            background: #2980b9;
+        }
+
+        .header-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+        }
+
+        .logout-btn {
+            background-color: #e74c3c;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.3s;
+        }
+
+        .logout-btn:hover {
+            background-color: #c0392b;
+            color: white;
+        }
+
+        .logout-btn i {
+            font-size: 16px;
+        }
+    </style>
+
+    <script>
+        function showStudentForm() {
+            document.getElementById('studentModal').style.display = 'block';
+        }
+
+        function closeStudentModal() {
+            document.getElementById('studentModal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('studentModal')) {
+                closeStudentModal();
+            }
+        }
+
+        function showRecordsModal() {
+            console.log('Opening records modal');
+            document.getElementById('recordsModal').style.display = 'block';
+            loadRecords();
+        }
+
+        function closeRecordsModal() {
+            document.getElementById('recordsModal').style.display = 'none';
+        }
+
+        async function loadRecords() {
+            try {
+                console.log('Loading records...');
+                const response = await fetch('/estudiante/feedback/records');
+                if (!response.ok) {
+                    throw new Error('Error al cargar registros');
+                }
+                const records = await response.json();
+                console.log('Records loaded:', records);
+                displayRecords(records);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al cargar los registros');
+            }
+        }
+
+        async function filterRecords() {
+            try {
+                const teacher = document.getElementById('filterTeacher').value;
+                const subject = document.getElementById('filterSubject').value;
+                const date = document.getElementById('filterDate').value;
+
+                const queryParams = new URLSearchParams();
+                if (teacher) queryParams.append('teacherId', teacher);
+                if (subject) queryParams.append('subject', subject);
+                if (date) queryParams.append('date', date);
+
+                const response = await fetch(`/estudiante/feedback/records?${queryParams.toString()}`);
+                if (!response.ok) {
+                    throw new Error('Error al filtrar registros');
+                }
+                const records = await response.json();
+                displayRecords(records);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al filtrar los registros');
+            }
+        }
+
+        function displayRecords(records) {
+            const tbody = document.getElementById('recordsTableBody');
+            tbody.innerHTML = '';
+
+            if (records.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">No hay registros disponibles</td></tr>';
+                return;
+            }
+
+            records.forEach(record => {
+                const recordDate = new Date(record.date);
+                const formattedDate = recordDate.toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                });
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${formattedDate}</td>
+                    <td>${record.teacherName}</td>
+                    <td>${getSubjectName(record.subject)}</td>
+                    <td>${translateQuality(record.teachingQuality)}</td>
+                    <td>${translateQuality(record.classPreparation)}</td>
+                    <td>${translateQuality(record.studentAttention)}</td>
+                    <td>${record.notes || '-'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function getSubjectName(subject) {
+            const subjects = {
+                'matematicas': 'Matemáticas',
+                'lenguaje': 'Lenguaje',
+                'ciencias': 'Ciencias',
+                'historia': 'Historia',
+                'ingles': 'Inglés'
+            };
+            return subjects[subject] || subject;
+        }
+
+        function translateQuality(quality) {
+            const translations = {
+                'siempre': 'Siempre',
+                'a veces': 'A veces',
+                'nunca': 'Nunca'
+            };
+            return translations[quality] || quality;
+        }
+
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('recordsModal')) {
+                closeRecordsModal();
+            }
+        }
+
+        document.getElementById('feedbackForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            try {
+                // Get the student ID from the hidden input
+                const studentId = document.getElementById('studentId').value;
+                console.log('Student ID before sending:', studentId); // Debug line
+
+                if (!studentId) {
+                    throw new Error('No se encontró el ID del estudiante');
+                }
+
+                const formData = {
+                    studentId: studentId, // Make sure this is set explicitly
+                    teacherId: this.querySelector('[name="teacherId"]').value,
+                    date: this.querySelector('[name="date"]').value,
+                    subject: this.querySelector('[name="subject"]').value,
+                    teachingQuality: this.querySelector('input[name="teachingQuality"]:checked')?.value,
+                    classPreparation: this.querySelector('input[name="classPreparation"]:checked')?.value,
+                    studentAttention: this.querySelector('input[name="studentAttention"]:checked')?.value,
+                    notes: this.querySelector('[name="notes"]').value || ''
+                };
+
+                console.log('Complete form data:', formData); // Debug line
+
+                const response = await fetch('/estudiante/feedback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Registro guardado exitosamente');
+                    this.reset();
+                    closeStudentModal();
+                    showRecordsModal();
+                } else {
+                    throw new Error(result.message || 'Error al guardar el registro');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al guardar el registro: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>
